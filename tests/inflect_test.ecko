@@ -1,0 +1,180 @@
+# Tests for the inflect package - offline, deterministic (no ai/fs/net).
+#
+# English pluralisation is mostly rules with a stubborn tail of exceptions, so
+# the interesting cases are the exceptions: the words that break each rule, and
+# the ones that have no plural at all. Ordinals are exactly specified, including
+# the 11/12/13 trap. Slugs follow the convention Django's slugify and Rails'
+# parameterize established, because a slug that disagrees with those is a slug
+# someone has to think about.
+import std.test
+import "../main.ecko"
+i = main
+
+# --- slugs -------------------------------------------------------------------
+
+test.case("slug lowercases, strips punctuation, and joins on hyphens", fn() {
+    test.eq(i.slug("Hello, World!"), "hello-world")
+    test.eq(i.slug("The Quick Brown Fox"), "the-quick-brown-fox")
+    test.eq(i.slug("already-a-slug"), "already-a-slug")
+    test.eq(i.slug("Under_scores and spaces"), "under-scores-and-spaces")
+})
+
+test.case("slug collapses runs and trims the edges", fn() {
+    test.eq(i.slug("  lots   of   space  "), "lots-of-space")
+    test.eq(i.slug("---leading and trailing---"), "leading-and-trailing")
+    test.eq(i.slug("!!!"), "")
+    test.eq(i.slug(""), "")
+})
+
+test.case("slug transliterates accented Latin rather than dropping it", fn() {
+    # Dropping would turn "Café Münster" into "caf-mnster", which is worse than
+    # useless as a URL: it is unreadable and collides with unrelated titles.
+    test.eq(i.slug("Café Münster"), "cafe-munster")
+    test.eq(i.slug("Œuvre à Paris"), "oeuvre-a-paris")
+    test.eq(i.slug("Straße"), "strasse")
+    test.eq(i.slug("Ærø Ångström"), "aero-angstrom")
+    test.eq(i.slug("Łódź"), "lodz")
+})
+
+test.case("slug keeps digits and handles a real headline", fn() {
+    test.eq(i.slug("Top 10 Reasons (2026 Edition)"), "top-10-reasons-2026-edition")
+    test.eq(i.slug("C++ vs Rust: a comparison"), "c-vs-rust-a-comparison")
+})
+
+test.case("slug takes a separator and a length limit", fn() {
+    test.eq(i.slug("Hello World", { separator: "_" }), "hello_world")
+    test.eq(i.slug("the quick brown fox", { max_length: 9 }), "the-quick")
+    # A limit must not leave a dangling separator.
+    test.eq(i.slug("the quick brown fox", { max_length: 10 }), "the-quick")
+})
+
+# --- pluralisation -----------------------------------------------------------
+
+test.case("plural applies the regular rules", fn() {
+    test.eq(i.plural("post"), "posts")
+    test.eq(i.plural("box"), "boxes")
+    test.eq(i.plural("bus"), "buses")
+    test.eq(i.plural("church"), "churches")
+    test.eq(i.plural("dish"), "dishes")
+    test.eq(i.plural("quiz"), "quizzes")
+})
+
+test.case("plural handles y, f and o", fn() {
+    test.eq(i.plural("city"), "cities")
+    # A vowel before the y keeps it: days, not daies.
+    test.eq(i.plural("day"), "days")
+    test.eq(i.plural("knife"), "knives")
+    test.eq(i.plural("wolf"), "wolves")
+    # ...but not every f word: roofs, not rooves.
+    test.eq(i.plural("roof"), "roofs")
+    test.eq(i.plural("hero"), "heroes")
+    test.eq(i.plural("photo"), "photos")
+})
+
+test.case("plural knows the irregulars", fn() {
+    for pair in [["person", "people"], ["child", "children"], ["man", "men"], ["woman", "women"], ["tooth", "teeth"], ["foot", "feet"], ["mouse", "mice"], ["goose", "geese"], ["ox", "oxen"]] {
+        test.eq(i.plural(pair[0]), pair[1])
+    }
+})
+
+test.case("some words have no separate plural", fn() {
+    for word in ["sheep", "fish", "series", "species", "deer", "information", "equipment"] {
+        test.eq(i.plural(word), word)
+        test.eq(i.singular(word), word)
+    }
+})
+
+test.case("singular reverses the rules", fn() {
+    for pair in [["posts", "post"], ["boxes", "box"], ["cities", "city"], ["knives", "knife"], ["people", "person"], ["children", "child"], ["teeth", "tooth"], ["mice", "mouse"], ["buses", "bus"]] {
+        test.eq(i.singular(pair[0]), pair[1])
+    }
+})
+
+test.case("plural and singular round-trip", fn() {
+    for word in ["post", "box", "city", "knife", "person", "child", "sheep", "quiz"] {
+        test.eq(i.singular(i.plural(word)), word)
+    }
+})
+
+test.case("case is preserved", fn() {
+    # A CMS pluralises headings and route names, so "Post" must not come back
+    # as "posts".
+    test.eq(i.plural("Post"), "Posts")
+    test.eq(i.plural("Person"), "People")
+    test.eq(i.singular("Cities"), "City")
+})
+
+test.case("pluralize counts, and can keep the number", fn() {
+    test.eq(i.pluralize(1, "post"), "1 post")
+    test.eq(i.pluralize(2, "post"), "2 posts")
+    test.eq(i.pluralize(0, "post"), "0 posts")
+    test.eq(i.pluralize(1, "person"), "1 person")
+    test.eq(i.pluralize(3, "person"), "3 people")
+    test.eq(i.word_for(1, "post"), "post")
+    test.eq(i.word_for(2, "post"), "posts")
+})
+
+# --- ordinals ----------------------------------------------------------------
+
+test.case("ordinal handles the teens, which are the whole trap", fn() {
+    # 11th, not 11st - the rule is not "look at the last digit".
+    test.eq(i.ordinal(1), "1st")
+    test.eq(i.ordinal(2), "2nd")
+    test.eq(i.ordinal(3), "3rd")
+    test.eq(i.ordinal(4), "4th")
+    test.eq(i.ordinal(11), "11th")
+    test.eq(i.ordinal(12), "12th")
+    test.eq(i.ordinal(13), "13th")
+    test.eq(i.ordinal(21), "21st")
+    test.eq(i.ordinal(22), "22nd")
+    test.eq(i.ordinal(23), "23rd")
+    test.eq(i.ordinal(101), "101st")
+    test.eq(i.ordinal(111), "111th")
+    test.eq(i.ordinal(0), "0th")
+})
+
+test.case("ordinal handles negatives by sign, not by digit", fn() {
+    test.eq(i.ordinal(0 - 1), "-1st")
+    test.eq(i.ordinal(0 - 11), "-11th")
+})
+
+# --- identifier cases --------------------------------------------------------
+
+test.case("case conversions round the usual four", fn() {
+    for form in [["snake", "hello_world_again"], ["kebab", "hello-world-again"], ["camel", "helloWorldAgain"], ["pascal", "HelloWorldAgain"]] {
+        test.eq(i.to_case("Hello World Again", form[0]), form[1])
+    }
+})
+
+test.case("case conversions read every input shape", fn() {
+    # Whatever it arrives as, the words must be recovered the same way.
+    for input in ["hello world again", "helloWorldAgain", "HelloWorldAgain", "hello_world_again", "hello-world-again", "HELLO_WORLD_AGAIN"] {
+        test.eq(i.snake(input), "hello_world_again")
+    }
+})
+
+test.case("words splits an identifier into its parts", fn() {
+    test.eq(i.words("helloWorldAgain"), ["hello", "world", "again"])
+    test.eq(i.words("XMLHttpRequest"), ["xml", "http", "request"])
+    test.eq(i.words("post_id"), ["post", "id"])
+    test.eq(i.words(""), [])
+})
+
+test.case("title casing capitalises words without touching the rest", fn() {
+    test.eq(i.title("hello world"), "Hello World")
+    test.eq(i.title("the_quick_brown_fox"), "The Quick Brown Fox")
+})
+
+test.case("an unknown case name is an error, not a silent passthrough", fn() {
+    caught = try { i.to_case("x", "swahili") } catch (e) { get(e, "kind") }
+    test.eq(caught, "inflect")
+})
+
+# --- the card's use case -----------------------------------------------------
+
+test.case("the CMS case: a title becomes a slug and a route pair", fn() {
+    title = "Introducing Ecko 0.10!"
+    test.eq(i.slug(title), "introducing-ecko-0-10")
+    test.eq("/" + i.plural(i.snake("Post")), "/posts")
+    test.eq("/" + i.snake("Post") + "/:id", "/post/:id")
+})

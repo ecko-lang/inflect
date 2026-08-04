@@ -1,0 +1,17 @@
+# inflect - slugs, plurals, ordinals and identifier cases, in pure Ecko.
+#
+# The shapes a CMS needs between a human title and a machine name:
+#
+#   import inflect
+#
+#   inflect.slug("Introducing Ecko 0.10!")   # "introducing-ecko-0-10"
+#   inflect.plural("post")                    # "posts"
+#   inflect.pluralize(3, "person")            # "3 people"
+#   inflect.ordinal(21)                       # "21st"
+#   inflect.snake("HelloWorld")               # "hello_world"
+#
+# Pure computation - no capabilities.
+export * from "./words.ecko"
+export * from "./slug.ecko"
+export * from "./english.ecko"
+export * from "./cases.ecko"

@@ -1,0 +1,40 @@
+# Converting an identifier between the usual four shapes.
+#
+# Everything routes through `words`, so any input shape reads the same: spaces,
+# snake_case, kebab-case, camelCase, PascalCase and SCREAMING_SNAKE all give the
+# same word list, and the output shape is chosen at the end.
+
+import "./words.ecko"
+
+## snake_case.
+export fn snake(text) = join(words.words(text), "_")
+
+## kebab-case.
+export fn kebab(text) = join(words.words(text), "-")
+
+## camelCase - first word lowercase, the rest capitalised.
+export fn camel(text) {
+    parts = words.words(text)
+    if len(parts) == 0 { return "" }
+    first(parts) + join(map(drop(parts, 1), words.capitalize), "")
+}
+
+## PascalCase - every word capitalised.
+export fn pascal(text) = join(map(words.words(text), words.capitalize), "")
+
+## Title Case - every word capitalised, spaces between.
+export fn title(text) = join(map(words.words(text), words.capitalize), " ")
+
+## The shape names `to_case` accepts.
+export fn case_names() = ["snake", "kebab", "camel", "pascal", "title"]
+
+## to_case(text, "snake"). An unknown name raises rather than passing the input
+## through, because a silent passthrough turns a typo into a subtle data bug.
+export fn to_case(text, name) {
+    if name == "snake" { return snake(text) }
+    if name == "kebab" { return kebab(text) }
+    if name == "camel" { return camel(text) }
+    if name == "pascal" { return pascal(text) }
+    if name == "title" { return title(text) }
+    words.fail("unknown case '{name}' - expected one of {case_names()}")
+}

@@ -1,0 +1,170 @@
+# Turning a title into a URL slug.
+#
+# Follows the convention Django's `slugify` and Rails' `parameterize` settled
+# on, because a slug that disagrees with those is one every reader has to stop
+# and think about.
+
+import std.string as str
+import "./words.ecko"
+
+## Accented Latin characters and what they become. Transliterating rather than
+## dropping matters: "Café Münster" stripped is "caf-mnster", which is
+## unreadable and collides with unrelated titles. Multi-character expansions
+## (ß to ss, æ to ae) are the reason this is a table and not arithmetic.
+export fn translit_table() {
+    {
+        à: "a",
+        á: "a",
+        â: "a",
+        ã: "a",
+        ä: "a",
+        å: "a",
+        ā: "a",
+        ă: "a",
+        ą: "a",
+        æ: "ae",
+        ç: "c",
+        ć: "c",
+        č: "c",
+        ĉ: "c",
+        ċ: "c",
+        ď: "d",
+        đ: "d",
+        è: "e",
+        é: "e",
+        ê: "e",
+        ë: "e",
+        ē: "e",
+        ĕ: "e",
+        ė: "e",
+        ę: "e",
+        ě: "e",
+        ƒ: "f",
+        ĝ: "g",
+        ğ: "g",
+        ġ: "g",
+        ģ: "g",
+        ĥ: "h",
+        ħ: "h",
+        ì: "i",
+        í: "i",
+        î: "i",
+        ï: "i",
+        ĩ: "i",
+        ī: "i",
+        ĭ: "i",
+        į: "i",
+        ı: "i",
+        ĵ: "j",
+        ķ: "k",
+        ĺ: "l",
+        ļ: "l",
+        ľ: "l",
+        ł: "l",
+        ñ: "n",
+        ń: "n",
+        ņ: "n",
+        ň: "n",
+        ò: "o",
+        ó: "o",
+        ô: "o",
+        õ: "o",
+        ö: "o",
+        ø: "o",
+        ō: "o",
+        ŏ: "o",
+        ő: "o",
+        œ: "oe",
+        ŕ: "r",
+        ř: "r",
+        ś: "s",
+        š: "s",
+        ş: "s",
+        ŝ: "s",
+        ß: "ss",
+        ţ: "t",
+        ť: "t",
+        ŧ: "t",
+        ù: "u",
+        ú: "u",
+        û: "u",
+        ü: "u",
+        ũ: "u",
+        ū: "u",
+        ŭ: "u",
+        ů: "u",
+        ű: "u",
+        ŵ: "w",
+        ý: "y",
+        ÿ: "y",
+        ŷ: "y",
+        ź: "z",
+        ż: "z",
+        ž: "z",
+        å: "a",
+        þ: "th",
+        ð: "d",
+    }
+}
+
+## Replace accented characters with their ASCII equivalents. Anything unknown is
+## left for `slug` to drop.
+export fn transliterate(text) {
+    table = translit_table()
+    mut out = ""
+    for c in chars(str.lower(string(text))) {
+        found = get(table, c)
+        out = out + if is_null(found) { c } else { found }
+    }
+    out
+}
+
+## slug("Hello, World!") -> "hello-world".
+##
+## Options: `separator` (default "-") and `max_length` (default 0, no limit).
+## A length limit cuts at a word boundary rather than mid-word, and never
+## leaves a dangling separator.
+export fn slug(text, opts = {}) {
+    options = if is_null(opts) { {} } else { opts }
+    separator = opt(options, "separator", "-")
+    max_length = opt(options, "max_length", 0)
+
+    ascii = transliterate(text)
+    mut parts = []
+    mut current = ""
+    for c in chars(ascii) {
+        if words.is_alpha(c) or words.is_digit(c) { current = current + c } else {
+            unless current == "" {
+                parts = push(parts, current)
+                current = ""
+            }
+        }
+    }
+    unless current == "" { parts = push(parts, current) }
+    if max_length > 0 { parts = clip(parts, separator, max_length) }
+    join(parts, separator)
+}
+
+## Keep whole words while the joined result fits. Cutting mid-word would produce
+## a slug that reads as a different, wrong word.
+export fn clip(parts, separator, max_length) {
+    mut kept = []
+    mut length = 0
+    for p in parts {
+        addition = if len(kept) == 0 {
+            len(chars(p))
+        } else {
+            len(chars(separator)) + len(chars(p))
+        }
+        if length + addition > max_length { return kept }
+        kept = push(kept, p)
+        length = length + addition
+    }
+    kept
+}
+
+## `get` with a default.
+export fn opt(m, k, fallback) {
+    found = get(m, k)
+    if is_null(found) { fallback } else { found }
+}

@@ -1,0 +1,10 @@
+{
+  "module": "github.com/ecko-lang/inflect",
+  "version": "0.10.0",
+  "entrypoint": "main.ecko",
+  "description": "URL slugs, English pluralisation, ordinals and identifier case conversion. Pure - no capabilities.",
+  "author": "Sean Nieuwoudt <sean@underwulf.com>",
+  "license": "MIT",
+  "capabilities": [],
+  "dependencies": {}
+}

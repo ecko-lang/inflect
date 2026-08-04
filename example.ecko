@@ -1,0 +1,62 @@
+# inflect - the shapes between a human title and a machine name.
+#
+#   ecko example.ecko
+
+import "./main.ecko" as inflect
+
+# --- a CMS turning a title into a URL -----------------------------------------
+
+titles = [
+    "Introducing Ecko 0.10!",
+    "Café Münster: a review",
+    "Top 10 Reasons (2026 Edition)",
+    "  lots   of   space  ",
+]
+print("slugs:")
+for t in titles {
+    print("  {t}")
+    print("    -> {inflect.slug(t)}")
+}
+print("")
+
+# Accents are transliterated, not dropped. Stripping would give "caf-mnster",
+# which is unreadable and collides with unrelated titles.
+print("separator and length:")
+print("  {inflect.slug(\"Hello World\", { separator: \"_\" })}")
+print(
+    "  {inflect.slug(\"the quick brown fox\", { max_length: 10 })}   (cut at a word, not mid-word)",
+)
+print("")
+
+# --- routes -------------------------------------------------------------------
+
+# The other half of the card's use case: /posts for the collection, /post/:id
+# for the member.
+for model in ["Post", "Category", "Person"] {
+    name = inflect.snake(model)
+    print("{model}: /{inflect.plural(name)}  and  /{name}/:id")
+}
+print("")
+
+# --- counting -----------------------------------------------------------------
+
+print("counting:")
+for n in [0, 1, 2, 5] {
+    print("  {inflect.pluralize(n, \"comment\")}, {inflect.pluralize(n, \"person\")}")
+}
+print("")
+
+print("ordinals - note 11 through 13, which break the last-digit rule:")
+mut line = ""
+for n in [1, 2, 3, 4, 11, 12, 13, 21, 22, 101, 111] {
+    line = line + inflect.ordinal(n) + " "
+}
+print("  {line}")
+print("")
+
+# --- identifier cases ---------------------------------------------------------
+
+print("one name, five shapes:")
+for shape in inflect.case_names() {
+    print("  {shape}: {inflect.to_case(\"XMLHttpRequest handler\", shape)}")
+}

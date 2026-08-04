@@ -1,0 +1,75 @@
+# Splitting an identifier into words, and putting it back together.
+#
+# Everything else in this package works on a list of lowercase words, so this
+# is the shared front door: whatever shape a name arrives in - spaces, snake,
+# kebab, camel, PascalCase, SCREAMING_SNAKE - it comes out the same.
+
+import std.string as str
+
+## The error this package raises.
+export fn fail(message) {
+    error({ kind: "inflect", message: message })
+}
+
+## Is this character an ASCII letter?
+export fn is_alpha(c) {
+    c >= "a" and c <= "z" or c >= "A" and c <= "Z"
+}
+
+## Is this character a digit?
+export fn is_digit(c) = c >= "0" and c <= "9"
+
+## Is this an uppercase ASCII letter?
+export fn is_upper(c) = c >= "A" and c <= "Z"
+
+## words("helloWorldAgain") -> ["hello", "world", "again"].
+##
+## Splits on anything that is not a letter or digit, and additionally at a
+## lowercase-to-uppercase boundary. A run of capitals is kept together until the
+## last one, so `XMLHttpRequest` gives ["xml", "http", "request"] rather than
+## eleven single letters.
+export fn words(text) {
+    cs = chars(string(text))
+    mut out = []
+    mut current = ""
+    for idx in 0..len(cs) {
+        c = cs[idx]
+        if is_alpha(c) == false and is_digit(c) == false {
+            # A separator: whatever we had is a word.
+            unless current == "" {
+                out = push(out, str.lower(current))
+                current = ""
+            }
+        } else {
+            if starts_word(cs, idx) and current != "" {
+                out = push(out, str.lower(current))
+                current = ""
+            }
+            current = current + c
+        }
+    }
+    unless current == "" { out = push(out, str.lower(current)) }
+    out
+}
+
+## Does a new word begin at `idx`? True at a lowercase-to-uppercase step
+## (`helloWorld`), and at the last capital of a run followed by a lowercase
+## letter (`XMLHttp` breaks before the H, not before the T).
+export fn starts_word(cs, idx) {
+    if idx == 0 { return false }
+    c = cs[idx]
+    unless is_upper(c) { return false }
+    prev = cs[idx - 1]
+    if is_upper(prev) == false { return true }
+    # Previous is also uppercase: only break if the next one is lowercase.
+    if idx + 1 >= len(cs) { return false }
+    next = cs[idx + 1]
+    is_alpha(next) and is_upper(next) == false
+}
+
+## Capitalise the first character, leaving the rest alone.
+export fn capitalize(word) {
+    cs = chars(string(word))
+    if len(cs) == 0 { return "" }
+    str.upper(cs[0]) + join(drop(cs, 1), "")
+}
