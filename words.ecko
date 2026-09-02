@@ -4,7 +4,7 @@
 # is the shared front door: whatever shape a name arrives in - spaces, snake,
 # kebab, camel, PascalCase, SCREAMING_SNAKE - it comes out the same.
 
-import std.string as str
+import std.str as str
 
 ## The error this package raises.
 export fn fail(message) {

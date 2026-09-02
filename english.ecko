@@ -4,7 +4,7 @@
 # first and win, because trying to derive "people" from "person" is how these
 # libraries end up producing "persons".
 
-import std.string as str
+import std.str as str
 import "./words.ecko"
 
 ## Words whose plural is the same as their singular. Applying a rule to any of

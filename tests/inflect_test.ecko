@@ -72,7 +72,17 @@ test.case("plural handles y, f and o", fn() {
 })
 
 test.case("plural knows the irregulars", fn() {
-    for pair in [["person", "people"], ["child", "children"], ["man", "men"], ["woman", "women"], ["tooth", "teeth"], ["foot", "feet"], ["mouse", "mice"], ["goose", "geese"], ["ox", "oxen"]] {
+    for pair in [
+        ["person", "people"],
+        ["child", "children"],
+        ["man", "men"],
+        ["woman", "women"],
+        ["tooth", "teeth"],
+        ["foot", "feet"],
+        ["mouse", "mice"],
+        ["goose", "geese"],
+        ["ox", "oxen"],
+    ] {
         test.eq(i.plural(pair[0]), pair[1])
     }
 })
@@ -85,7 +95,17 @@ test.case("some words have no separate plural", fn() {
 })
 
 test.case("singular reverses the rules", fn() {
-    for pair in [["posts", "post"], ["boxes", "box"], ["cities", "city"], ["knives", "knife"], ["people", "person"], ["children", "child"], ["teeth", "tooth"], ["mice", "mouse"], ["buses", "bus"]] {
+    for pair in [
+        ["posts", "post"],
+        ["boxes", "box"],
+        ["cities", "city"],
+        ["knives", "knife"],
+        ["people", "person"],
+        ["children", "child"],
+        ["teeth", "tooth"],
+        ["mice", "mouse"],
+        ["buses", "bus"],
+    ] {
         test.eq(i.singular(pair[0]), pair[1])
     }
 })
@@ -141,14 +161,26 @@ test.case("ordinal handles negatives by sign, not by digit", fn() {
 # --- identifier cases --------------------------------------------------------
 
 test.case("case conversions round the usual four", fn() {
-    for form in [["snake", "hello_world_again"], ["kebab", "hello-world-again"], ["camel", "helloWorldAgain"], ["pascal", "HelloWorldAgain"]] {
+    for form in [
+        ["snake", "hello_world_again"],
+        ["kebab", "hello-world-again"],
+        ["camel", "helloWorldAgain"],
+        ["pascal", "HelloWorldAgain"],
+    ] {
         test.eq(i.to_case("Hello World Again", form[0]), form[1])
     }
 })
 
 test.case("case conversions read every input shape", fn() {
     # Whatever it arrives as, the words must be recovered the same way.
-    for input in ["hello world again", "helloWorldAgain", "HelloWorldAgain", "hello_world_again", "hello-world-again", "HELLO_WORLD_AGAIN"] {
+    for input in [
+        "hello world again",
+        "helloWorldAgain",
+        "HelloWorldAgain",
+        "hello_world_again",
+        "hello-world-again",
+        "HELLO_WORLD_AGAIN",
+    ] {
         test.eq(i.snake(input), "hello_world_again")
     }
 })
