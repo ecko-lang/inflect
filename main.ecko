@@ -11,7 +11,10 @@
 #   inflect.snake("HelloWorld")               # "hello_world"
 #
 # Pure computation - no capabilities.
-export * from "./words.ecko"
+# `fail`, `is_alpha`, `is_digit` and `is_upper` stay exported by words.ecko so
+# slug.ecko, english.ecko and cases.ecko can reach them, but they are internal
+# character plumbing - a blanket `export *` would publish them as `inflect.*`.
+export { words, capitalize } from "./words.ecko"
 export * from "./slug.ecko"
 export * from "./english.ecko"
 export * from "./cases.ecko"

@@ -55,7 +55,7 @@ export fn words(text) {
 ## Does a new word begin at `idx`? True at a lowercase-to-uppercase step
 ## (`helloWorld`), and at the last capital of a run followed by a lowercase
 ## letter (`XMLHttp` breaks before the H, not before the T).
-export fn starts_word(cs, idx) {
+fn starts_word(cs, idx) {
     if idx == 0 { return false }
     c = cs[idx]
     unless is_upper(c) { return false }

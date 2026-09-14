@@ -84,17 +84,17 @@ export fn o_takes_es() {
 }
 
 ## Is this a vowel?
-export fn is_vowel(c) = contains(["a", "e", "i", "o", "u"], str.lower(c))
+fn is_vowel(c) = contains(["a", "e", "i", "o", "u"], str.lower(c))
 
 ## The last `n` characters of a word.
-export fn tail(word, n) {
+fn tail(word, n) {
     cs = chars(word)
     if len(cs) < n { return word }
     join(drop(cs, len(cs) - n), "")
 }
 
 ## Everything but the last `n` characters.
-export fn head(word, n) {
+fn head(word, n) {
     cs = chars(word)
     if len(cs) < n { return "" }
     join(take(cs, len(cs) - n), "")
@@ -103,7 +103,7 @@ export fn head(word, n) {
 ## Re-apply the casing of `original` to `result`: a leading capital stays a
 ## leading capital, and an all-caps word stays all-caps. A CMS pluralises
 ## headings and route names, so "Post" must not come back as "posts".
-export fn match_case(original, result) {
+fn match_case(original, result) {
     cs = chars(original)
     if len(cs) == 0 { return result }
     if original == str.upper(original) and len(cs) > 1 { return str.upper(result) }
@@ -122,7 +122,7 @@ export fn plural(word) {
 }
 
 ## The regular rules, applied to an already-lowercased word.
-export fn plural_rule(w) {
+fn plural_rule(w) {
     # -s, -x, -z, -ch, -sh take -es: buses, boxes, churches.
     if tail(w, 2) == "ch" or tail(w, 2) == "sh" { return w + "es" }
     if tail(w, 1) == "z" { return w + "zes" }
@@ -149,7 +149,7 @@ export fn singular(word) {
 }
 
 ## The regular rules in reverse.
-export fn singular_rule(w) {
+fn singular_rule(w) {
     if tail(w, 3) == "ies" and len(chars(w)) > 3 { return head(w, 3) + "y" }
     if tail(w, 3) == "ves" {
         stem = head(w, 3)

@@ -147,7 +147,7 @@ export fn slug(text, opts = {}) {
 
 ## Keep whole words while the joined result fits. Cutting mid-word would produce
 ## a slug that reads as a different, wrong word.
-export fn clip(parts, separator, max_length) {
+fn clip(parts, separator, max_length) {
     mut kept = []
     mut length = 0
     for p in parts {
@@ -164,7 +164,7 @@ export fn clip(parts, separator, max_length) {
 }
 
 ## `get` with a default.
-export fn opt(m, k, fallback) {
+fn opt(m, k, fallback) {
     found = get(m, k)
     if is_null(found) { fallback } else { found }
 }
