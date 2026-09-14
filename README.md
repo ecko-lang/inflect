@@ -16,7 +16,7 @@ ecko get github.com/ecko-lang/inflect
 import inflect
 ```
 
-Needs Ecko 0.10.0 or later.
+Needs Ecko 0.20.0 or later.
 
 ## Usage
 
